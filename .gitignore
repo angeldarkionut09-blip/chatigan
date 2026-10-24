@@ -1,0 +1,22 @@
+node_modules/
+dist/
+coverage/
+.env
+.env.*
+!.env.example
+!.env.production.example
+prisma/*.db
+prisma/*.db-journal
+*.log
+.DS_Store
+
+# Date locale si secrete
+.aws/
+.codex/
+.agents/
+work/
+*.db
+*.sqlite
+*.sqlite3
+*.pem
+*.key

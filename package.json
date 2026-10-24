@@ -1,0 +1,50 @@
+{
+  "name": "chatigan",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "dev": "concurrently -k -n api,web -c blue,green \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:api": "node --import tsx --watch server/index.ts",
+    "dev:web": "vite --host localhost",
+    "build": "npm run db:generate && tsc -p tsconfig.server.json && vite build",
+    "start": "node dist/server/index.js",
+    "db:generate": "prisma generate --schema prisma/schema.prisma",
+    "db:push": "prisma db push --schema prisma/schema.prisma",
+    "admin:bootstrap": "node --import tsx server/admin-bootstrap.ts",
+    "admin:bootstrap:prod": "node dist/server/admin-bootstrap.js",
+    "test": "node --import tsx --test server/security.test.ts server/chat-protocol.test.ts server/chat-events.test.ts",
+    "check": "tsc --noEmit -p tsconfig.server.json && tsc --noEmit -p tsconfig.client.json"
+  },
+  "dependencies": {
+    "@prisma/client": "6.19.3",
+    "argon2": "0.45.1",
+    "cookie-parser": "1.4.7",
+    "dotenv": "16.6.1",
+    "express": "5.3.0",
+    "helmet": "8.3.0",
+    "lucide-react": "0.576.0",
+    "prisma": "6.19.3",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "1.4.10",
+    "@types/express": "5.0.6",
+    "@types/node": "24.10.0",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.2",
+    "concurrently": "9.2.5",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3",
+    "vite": "8.3.5"
+  },
+  "overrides": {
+    "deepmerge-ts": "8.0.0"
+  }
+}

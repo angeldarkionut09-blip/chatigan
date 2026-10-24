@@ -1,0 +1,16 @@
+services:
+  chatigan:
+    build: .
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: file:/app/data/dev.db
+    volumes:
+      - chatigan-data:/app/data
+    command: ["sh", "-c", "npm run db:push && npm run admin:bootstrap:prod && npm start"]
+    restart: unless-stopped
+
+volumes:
+  chatigan-data:

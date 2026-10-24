@@ -1,0 +1,8 @@
+RewriteEngine On
+
+# Force secure cookies, HTTPS origin checks, and the public HTTPS URL.
+RewriteCond %{HTTPS} !=on
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+# LiteSpeed keeps ports 80/443; forward only this vhost to the private app port.
+RewriteRule ^(.*)$ http://127.0.0.1:3100/$1 [P,L]

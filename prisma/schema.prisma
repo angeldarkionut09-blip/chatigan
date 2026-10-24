@@ -1,0 +1,144 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                  String        @id @default(cuid())
+  displayName         String
+  phone               String        @unique
+  passwordHash        String
+  chatPublicKey       String?
+  chatSigningPublicKey String?
+  role                String        @default("USER")
+  status              String        @default("ACTIVE")
+  mustChangePassword  Boolean       @default(false)
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  lastLoginAt         DateTime?
+  sessions            Session[]
+  submittedReports    Report[]      @relation("ReportSubmitter")
+  auditEvents         AuditLog[]
+  conversationsLow    Conversation[] @relation("ConversationLow")
+  conversationsHigh   Conversation[] @relation("ConversationHigh")
+  sentMessages        Message[]      @relation("MessageSender")
+  receivedMessages    Message[]      @relation("MessageRecipient")
+
+  @@index([createdAt])
+  @@index([status, role])
+}
+
+model Session {
+  id              String    @id @default(cuid())
+  tokenHash       String    @unique
+  csrfTokenHash   String
+  userId          String
+  userAgent       String?
+  createdAt       DateTime  @default(now())
+  expiresAt       DateTime
+  revokedAt       DateTime?
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt, expiresAt])
+}
+
+model LoginThrottle {
+  key             String    @id
+  failedCount     Int       @default(0)
+  windowStartedAt DateTime  @default(now())
+  blockedUntil    DateTime?
+  updatedAt       DateTime  @updatedAt
+}
+
+model Report {
+  id              String    @id @default(cuid())
+  category        String
+  summary         String
+  status          String    @default("OPEN")
+  submitterId     String?
+  targetUserId    String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  submitter       User?     @relation("ReportSubmitter", fields: [submitterId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+}
+
+model ChatGroup {
+  id              String    @id @default(cuid())
+  name            String
+  description     String    @default("")
+  status          String    @default("ACTIVE")
+  visibility      String    @default("PRIVATE")
+  memberCount     Int       @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([status, createdAt])
+}
+
+model Conversation {
+  id          String    @id @default(cuid())
+  pairKey     String    @unique
+  userLowId   String
+  userHighId  String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  userLow     User      @relation("ConversationLow", fields: [userLowId], references: [id], onDelete: Cascade)
+  userHigh    User      @relation("ConversationHigh", fields: [userHighId], references: [id], onDelete: Cascade)
+  messages    Message[]
+
+  @@index([userLowId, updatedAt])
+  @@index([userHighId, updatedAt])
+}
+
+model Message {
+  id                      String       @id @default(cuid())
+  clientMessageId         String       @unique
+  conversationId          String
+  senderId                String
+  recipientId             String
+  ciphertext              String
+  iv                      String
+  salt                    String
+  signature               String
+  senderEcdhPublicKey     String
+  senderSigningPublicKey String
+  createdAt               DateTime     @default(now())
+  conversation            Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender                  User         @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  recipient               User         @relation("MessageRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@index([recipientId, createdAt])
+}
+
+model AppSetting {
+  key             String    @id
+  value           String
+  updatedAt       DateTime  @updatedAt
+}
+
+model SystemState {
+  key             String    @id
+  value           String
+  createdAt       DateTime  @default(now())
+}
+
+model AuditLog {
+  id              String    @id @default(cuid())
+  actorId         String?
+  action          String
+  subjectType     String?
+  subjectId       String?
+  details         String?
+  createdAt       DateTime  @default(now())
+  actor           User?     @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([actorId, createdAt])
+}
